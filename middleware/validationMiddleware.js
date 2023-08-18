@@ -1,10 +1,25 @@
-import { StatusCodes } from "http-status-codes";
+import { body, validationResult } from "express-validator";
+import { BadRequestError } from "../errors/customErrors.js";
 
-const errorHandlerMiddleware = (err, req, res, next) => {
-  console.log(err);
-  const statusCode = err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
-  const msg = err.message || "something went wrong, try again later";
-  res.status(statusCode).json({ msg });
+const withValidationErrors = (validateValues) => {
+  return [
+    validateValues,
+    (req, res, next) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        const errorMessages = errors.array().map((error) => error.msg);
+        throw new BadRequestError(errorMessages);
+      }
+      next();
+    },
+  ];
 };
 
-export default errorHandlerMiddleware;
+export const validateTest = withValidationErrors([
+  body("name")
+    .notEmpty()
+    .withMessage("name is required")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("name must be between 3 and 50 characters long")
+    .trim(),
+]);
