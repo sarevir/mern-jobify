@@ -1,4 +1,4 @@
 export const authenticateUser = async (req, res, next) => {
-  console.log("auth middleware");
+  console.log(req.cookies);
   next();
 };
